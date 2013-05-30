@@ -167,8 +167,8 @@ def cli():
         '--port', type=int, default=DEFAULT_GERRIT_PORT,
         help='SSH port for gerrit')
     parser.add_argument(
-        '--username', default=None,
-        help='Your SSH username for gerrit (optional but HIGHLY recommended)')
+        '--username', default=os.getlogin(),
+        help='Your SSH username for gerrit')
     parser.add_argument(
         '--key', default=None,
         help='Path to your SSH public key for gerrit')

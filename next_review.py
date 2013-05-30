@@ -143,7 +143,7 @@ def main(args):
         print 'Nothing to review!'
 
 
-if __name__ == '__main__':
+def cli():
     parser = argparse.ArgumentParser(
         prog='next-review',
         description='Start your next gerrit code review without any hassle.')
@@ -165,3 +165,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     main(args)
+
+
+if __name__ == '__main__':
+    cli()

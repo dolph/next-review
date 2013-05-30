@@ -129,11 +129,17 @@ def ignore_wip(reviews):
     return [x for x in reviews if x['status'] != 'WORKINPROGRESS']
 
 
-def which(fn):
-    for path in os.environ["PATH"].split(":"):
-        if os.path.exists(path + "/" + fn):
-            return path + "/" + fn
-    return None
+def which(program):
+    """Locates a program file in the user's path."""
+    for path in os.environ['PATH'].split(":"):
+        if os.path.exists(path + '/' + program):
+            return path + '/' + program
+
+
+def open_url(url):
+    """Opens a URL using whatever program is available on the system."""
+    open_app = which('xdg-open') or 'open'
+    os.system('%s %s' % (open_app, url))
 
 
 def main(args):
@@ -165,10 +171,7 @@ def main(args):
         render_reviews(reviews, maximum=1)
 
         # open the oldest code review in a browser
-        open_app = 'open'
-        if which('xdg-open'):
-            open_app = 'xdg-open'
-        os.system('%s %s' % (open_app, reviews[0]['url']))
+        open_url(reviews[0]['url'])
 
     sys.exit(len(reviews))
 

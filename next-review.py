@@ -96,6 +96,17 @@ def ignore_my_reviews(reviews, username=None):
     return filtered_reviews
 
 
+def ignore_previously_reviewed(reviews, username=None):
+    """Ignore things I've already reviewed."""
+    filtered_reviews = []
+    for review in reviews:
+        reviewers = [x['by']['username'] for x
+                     in review['patchSets'][-1]['approvals']]
+        if username not in reviewers:
+            filtered_reviews.append(review)
+    return filtered_reviews
+
+
 def ignore_wip(reviews):
     return [x for x in reviews if x['status'] != 'WORKINPROGRESS']
 
@@ -112,6 +123,7 @@ def main(args):
     reviews = require_jenkins_upvote(reviews)
     reviews = require_smokestack_upvote(reviews)
     reviews = ignore_my_reviews(reviews, username=args.username)
+    reviews = ignore_previously_reviewed(reviews, username=args.username)
 
     # review old stuff before it expires
     reviews = sort_reviews_by_last_updated(reviews)

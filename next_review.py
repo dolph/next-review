@@ -54,10 +54,15 @@ def sort_reviews_by_last_updated(reviews):
     return sorted(reviews, key=lambda review: review['lastUpdated'])
 
 
-def votes_by_username(review):
-    """Return a dict of votes like {'username': -1}"""
-    return dict([(x['by']['username'], int(x['value'])) for x
-                 in review['currentPatchSet'].get('approvals', [])])
+def votes_by_name(review):
+    """Return a dict of votes like {'name': -1}"""
+    return dict([(_name(x['by']), int(x['value']))
+                 for x in review['currentPatchSet'].get('approvals', [])])
+
+
+def _name(ref):
+    """Returns the username or email of a reference."""
+    return ref.get('username', ref.get('email'))
 
 
 def render_reviews(reviews, maximum=None):
@@ -68,7 +73,7 @@ def render_reviews(reviews, maximum=None):
 def ignore_blocked_reviews(reviews):
     filtered_reviews = []
     for review in reviews:
-        if -2 not in votes_by_username(review).values():
+        if -2 not in votes_by_name(review).values():
             filtered_reviews.append(review)
     return filtered_reviews
 
@@ -76,7 +81,7 @@ def ignore_blocked_reviews(reviews):
 def require_jenkins_upvote(reviews):
     filtered_reviews = []
     for review in reviews:
-        votes = votes_by_username(review)
+        votes = votes_by_name(review)
         if 'jenkins' in votes and votes['jenkins'] >= 1:
             filtered_reviews.append(review)
     return filtered_reviews
@@ -86,7 +91,7 @@ def ignore_smokestack_downvotes(reviews):
     """Smokestack doesn't verify all reviews, so we can't require upvotes."""
     filtered_reviews = []
     for review in reviews:
-        votes = votes_by_username(review)
+        votes = votes_by_name(review)
         if 'smokestack' not in votes or votes['smokestack'] != -1:
             filtered_reviews.append(review)
     return filtered_reviews
@@ -96,7 +101,7 @@ def ignore_my_reviews(reviews, username=None):
     """Ignore reviews created by me."""
     filtered_reviews = []
     for review in reviews:
-        if review['owner']['username'] != username:
+        if _name(review['owner']) != username:
             filtered_reviews.append(review)
     return filtered_reviews
 
@@ -105,9 +110,7 @@ def ignore_previously_reviewed(reviews, username=None):
     """Ignore things I've already reviewed."""
     filtered_reviews = []
     for review in reviews:
-        reviewers = [x['by']['username'] for x
-                     in review['currentPatchSet']['approvals']]
-        if username not in reviewers:
+        if username not in votes_by_name(review):
             filtered_reviews.append(review)
     return filtered_reviews
 
@@ -116,7 +119,7 @@ def ignore_previously_commented(reviews, username=None):
     """Ignore reviews where I'm the last commenter."""
     filtered_reviews = []
     for review in reviews:
-        if review['comments'][-1]['reviewer']['username'] != username:
+        if _name(review['comments'][-1]['reviewer']) != username:
             filtered_reviews.append(review)
     return filtered_reviews
 

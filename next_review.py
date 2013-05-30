@@ -35,7 +35,7 @@ def get_watched_reviews(client):
     while True:
         query = [
             'gerrit', 'query', 'is:watched', 'is:open', 'limit:100',
-            '--all-approvals', '--patch-sets', '--format=JSON']
+            '--current-patch-set', '--format=JSON']
         if reviews:
             query.append('resume_sortkey:%s' % reviews[-2]['sortKey'])
         stdin, stdout, stderr = client.exec_command(' '.join(query))
@@ -61,7 +61,7 @@ def render_reviews(reviews, maximum=None):
 def ignore_blocked_reviews(reviews):
     filtered_reviews = []
     for review in reviews:
-        latest_patchset = review['patchSets'][-1]
+        latest_patchset = review['currentPatchSet']
         if 'approvals' not in latest_patchset:
             # no one has reviewed this yet
             filtered_reviews.append(review)
@@ -75,7 +75,7 @@ def ignore_blocked_reviews(reviews):
 def require_jenkins_upvote(reviews):
     filtered_reviews = []
     for review in reviews:
-        latest_patchset = review['patchSets'][-1]
+        latest_patchset = review['currentPatchSet']
         for vote in latest_patchset.get('approvals', []):
             if vote['by']['username'] == 'jenkins' and vote['value'] == '1':
                 filtered_reviews.append(review)
@@ -85,7 +85,7 @@ def require_jenkins_upvote(reviews):
 def require_smokestack_upvote(reviews):
     filtered_reviews = []
     for review in reviews:
-        for vote in review['patchSets'][-1].get('approvals', []):
+        for vote in review['currentPatchSet'].get('approvals', []):
             if vote['by']['username'] == 'smokestack' and vote['value'] == '1':
                 filtered_reviews.append(review)
     return filtered_reviews
@@ -105,7 +105,7 @@ def ignore_previously_reviewed(reviews, username=None):
     filtered_reviews = []
     for review in reviews:
         reviewers = [x['by']['username'] for x
-                     in review['patchSets'][-1]['approvals']]
+                     in review['currentPatchSet']['approvals']]
         if username not in reviewers:
             filtered_reviews.append(review)
     return filtered_reviews

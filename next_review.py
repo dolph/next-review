@@ -13,6 +13,7 @@
 import argparse
 import json
 import os
+import sys
 
 import paramiko
 
@@ -151,6 +152,8 @@ def main(args):
         os.system('open %s' % reviews[0]['url'])
     elif not reviews:
         print 'Nothing to review!'
+
+    sys.exit(len(reviews))
 
 
 def cli():

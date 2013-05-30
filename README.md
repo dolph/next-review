@@ -16,7 +16,7 @@ your opinion, cast your vote and then move on to your `next-review`. Got it?
 Installation
 ------------
 
-    $ python setup.py install
+    $ pip install next-review
 
 Usage
 -----

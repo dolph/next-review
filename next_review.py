@@ -173,7 +173,7 @@ def cli():
         '--key', default=None,
         help='Path to your SSH public key for gerrit')
     parser.add_argument(
-        '--list',action='store_true',
+        '--list', action='store_true',
         help='List recommended code reviews in order of descending priority.')
 
     args = parser.parse_args()

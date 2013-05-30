@@ -129,6 +129,13 @@ def ignore_wip(reviews):
     return [x for x in reviews if x['status'] != 'WORKINPROGRESS']
 
 
+def which(fn):
+    for path in os.environ["PATH"].split(":"):
+        if os.path.exists(path + "/" + fn):
+            return path + "/" + fn
+    return None
+
+
 def main(args):
     client = ssh_client(
         host=args.host, port=args.port, user=args.username, key=args.key)
@@ -158,7 +165,10 @@ def main(args):
         render_reviews(reviews, maximum=1)
 
         # open the oldest code review in a browser
-        os.system('open %s' % reviews[0]['url'])
+        open_app = 'open'
+        if which('xdg-open'):
+            open_app = 'xdg-open'
+        os.system('%s %s' % (open_app, reviews[0]['url']))
 
     sys.exit(len(reviews))
 

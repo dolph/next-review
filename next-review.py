@@ -139,7 +139,7 @@ if __name__ == '__main__':
         help='SSH port for gerrit')
     parser.add_argument(
         '--username', default=None,
-        help='Your SSH username for gerrit')
+        help='Your SSH username for gerrit (optional but HIGHLY recommended)')
     parser.add_argument(
         '--key', default=None,
         help='Path to your SSH public key for gerrit')

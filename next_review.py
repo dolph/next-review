@@ -143,15 +143,15 @@ def main(args):
     # review old stuff before it expires
     reviews = sort_reviews_by_last_updated(reviews)
 
-    if reviews and args.no_action:
+    if not reviews:
+        print 'Nothing to review!'
+    elif args.list:
         render_reviews(reviews)
-    elif reviews and not args.no_action:
+    else:
         render_reviews(reviews, maximum=1)
 
         # open the oldest code review in a browser
         os.system('open %s' % reviews[0]['url'])
-    elif not reviews:
-        print 'Nothing to review!'
 
     sys.exit(len(reviews))
 
@@ -173,8 +173,8 @@ def cli():
         '--key', default=None,
         help='Path to your SSH public key for gerrit')
     parser.add_argument(
-        '-N', '--no-action', action='store_true',
-        help='Do not attempt to open the review')
+        '--list',action='store_true',
+        help='List recommended code reviews in order of descending priority.')
 
     args = parser.parse_args()
     main(args)

@@ -4,7 +4,7 @@ import setuptools
 setuptools.setup(
     name='next-review',
     description='Start your next gerrit code review without any hassle.',
-    version='1.0.2',
+    version='1.0.3',
     scripts=['next_review.py'],
     install_requires=['paramiko'],
     py_modules=['next_review'],

@@ -97,29 +97,30 @@ def ignore_smokestack_downvotes(reviews):
     return filtered_reviews
 
 
-def ignore_my_reviews(reviews, username=None):
+def ignore_my_reviews(reviews, username=None, email=None):
     """Ignore reviews created by me."""
     filtered_reviews = []
     for review in reviews:
-        if _name(review['owner']) != username:
+        if _name(review['owner']) not in (username, email):
             filtered_reviews.append(review)
     return filtered_reviews
 
 
-def ignore_previously_reviewed(reviews, username=None):
+def ignore_previously_reviewed(reviews, username=None, email=None):
     """Ignore things I've already reviewed."""
     filtered_reviews = []
     for review in reviews:
-        if username not in votes_by_name(review):
+        if (username not in votes_by_name(review)
+                and email not in votes_by_name(review)):
             filtered_reviews.append(review)
     return filtered_reviews
 
 
-def ignore_previously_commented(reviews, username=None):
+def ignore_previously_commented(reviews, username=None, email=None):
     """Ignore reviews where I'm the last commenter."""
     filtered_reviews = []
     for review in reviews:
-        if _name(review['comments'][-1]['reviewer']) != username:
+        if _name(review['comments'][-1]['reviewer']) not in (username, email):
             filtered_reviews.append(review)
     return filtered_reviews
 
@@ -139,9 +140,12 @@ def main(args):
     reviews = ignore_blocked_reviews(reviews)
     reviews = require_jenkins_upvote(reviews)
     reviews = ignore_smokestack_downvotes(reviews)
-    reviews = ignore_my_reviews(reviews, username=args.username)
-    reviews = ignore_previously_reviewed(reviews, username=args.username)
-    reviews = ignore_previously_commented(reviews, username=args.username)
+    reviews = ignore_my_reviews(
+        reviews, username=args.username, email=args.email)
+    reviews = ignore_previously_reviewed(
+        reviews, username=args.username, email=args.email)
+    reviews = ignore_previously_commented(
+        reviews, username=args.username, email=args.email)
 
     # review old stuff before it expires
     reviews = sort_reviews_by_last_updated(reviews)
@@ -172,6 +176,9 @@ def cli():
     parser.add_argument(
         '--username', default=os.getlogin(),
         help='Your SSH username for gerrit')
+    parser.add_argument(
+        '--email', default=None,
+        help='Your email address for gerrit')
     parser.add_argument(
         '--key', default=None,
         help='Path to your SSH public key for gerrit')

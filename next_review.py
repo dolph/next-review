@@ -61,16 +61,22 @@ def render_reviews(reviews, maximum=None):
 def ignore_blocked_reviews(reviews):
     filtered_reviews = []
     for review in reviews:
-        votes = [x['value'] for x in review['patchSets'][-1]['approvals']]
-        if "-2" not in votes:
+        latest_patchset = review['patchSets'][-1]
+        if 'approvals' not in latest_patchset:
+            # no one has reviewed this yet
             filtered_reviews.append(review)
+        else:
+            votes = [x['value'] for x in latest_patchset['approvals']]
+            if "-2" not in votes:
+                filtered_reviews.append(review)
     return filtered_reviews
 
 
 def require_jenkins_upvote(reviews):
     filtered_reviews = []
     for review in reviews:
-        for vote in review['patchSets'][-1]['approvals']:
+        latest_patchset = review['patchSets'][-1]
+        for vote in latest_patchset.get('approvals', []):
             if vote['by']['username'] == 'jenkins' and vote['value'] == '1':
                 filtered_reviews.append(review)
     return filtered_reviews
@@ -79,7 +85,7 @@ def require_jenkins_upvote(reviews):
 def require_smokestack_upvote(reviews):
     filtered_reviews = []
     for review in reviews:
-        for vote in review['patchSets'][-1]['approvals']:
+        for vote in review['patchSets'][-1].get('approvals', []):
             if vote['by']['username'] == 'smokestack' and vote['value'] == '1':
                 filtered_reviews.append(review)
     return filtered_reviews

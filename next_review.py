@@ -54,6 +54,12 @@ def sort_reviews_by_last_updated(reviews):
     return sorted(reviews, key=lambda review: review['lastUpdated'])
 
 
+def votes_by_username(review):
+    """Return a dict of votes like {'username': -1}"""
+    return dict([(x['by']['username'], int(x['value'])) for x
+                 in review['currentPatchSet'].get('approvals', [])])
+
+
 def render_reviews(reviews, maximum=None):
     for review in reviews[:maximum]:
         print review['url'], review['subject'].strip()
@@ -62,33 +68,27 @@ def render_reviews(reviews, maximum=None):
 def ignore_blocked_reviews(reviews):
     filtered_reviews = []
     for review in reviews:
-        latest_patchset = review['currentPatchSet']
-        if 'approvals' not in latest_patchset:
-            # no one has reviewed this yet
+        if -2 not in votes_by_username(review).values():
             filtered_reviews.append(review)
-        else:
-            votes = [x['value'] for x in latest_patchset['approvals']]
-            if "-2" not in votes:
-                filtered_reviews.append(review)
     return filtered_reviews
 
 
 def require_jenkins_upvote(reviews):
     filtered_reviews = []
     for review in reviews:
-        latest_patchset = review['currentPatchSet']
-        for vote in latest_patchset.get('approvals', []):
-            if vote['by']['username'] == 'jenkins' and vote['value'] == '1':
-                filtered_reviews.append(review)
+        votes = votes_by_username(review)
+        if 'jenkins' in votes and votes['jenkins'] >= 1:
+            filtered_reviews.append(review)
     return filtered_reviews
 
 
-def require_smokestack_upvote(reviews):
+def ignore_smokestack_downvotes(reviews):
+    """Smokestack doesn't verify all reviews, so we can't require upvotes."""
     filtered_reviews = []
     for review in reviews:
-        for vote in review['currentPatchSet'].get('approvals', []):
-            if vote['by']['username'] == 'smokestack' and vote['value'] == '1':
-                filtered_reviews.append(review)
+        votes = votes_by_username(review)
+        if 'smokestack' not in votes or votes['smokestack'] != -1:
+            filtered_reviews.append(review)
     return filtered_reviews
 
 
@@ -135,7 +135,7 @@ def main(args):
     reviews = ignore_wip(reviews)
     reviews = ignore_blocked_reviews(reviews)
     reviews = require_jenkins_upvote(reviews)
-    reviews = require_smokestack_upvote(reviews)
+    reviews = ignore_smokestack_downvotes(reviews)
     reviews = ignore_my_reviews(reviews, username=args.username)
     reviews = ignore_previously_reviewed(reviews, username=args.username)
     reviews = ignore_previously_commented(reviews, username=args.username)

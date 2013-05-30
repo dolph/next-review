@@ -87,7 +87,7 @@ def require_smokestack_upvote(reviews):
     return filtered_reviews
 
 
-def ignore_my_reviews(reviews, username):
+def ignore_my_reviews(reviews, username=None):
     """Ignore reviews created by me."""
     filtered_reviews = []
     for review in reviews:

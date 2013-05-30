@@ -30,12 +30,13 @@ def ssh_client(host, port, user=None, key=None):
     return client
 
 
-def get_watched_reviews(client):
+def get_watched_reviews(client, projects):
     reviews = []
 
     while True:
+        project_query = '(' + ' OR '.join(projects) + ')'
         query = [
-            'gerrit', 'query', 'is:watched', 'is:open', 'limit:100',
+            'gerrit', 'query', project_query, 'is:open', 'limit:100',
             '--current-patch-set', '--comments', '--format=JSON']
         if reviews:
             query.append('resume_sortkey:%s' % reviews[-2]['sortKey'])
@@ -146,7 +147,7 @@ def main(args):
     client = ssh_client(
         host=args.host, port=args.port, user=args.username, key=args.key)
 
-    reviews = get_watched_reviews(client)
+    reviews = get_watched_reviews(client, args.projects)
 
     # filter out reviews that are not prime review targets
     reviews = ignore_wip(reviews)
@@ -198,7 +199,9 @@ def cli():
     parser.add_argument(
         '--list', action='store_true',
         help='List recommended code reviews in order of descending priority.')
-
+    parser.add_argument(
+        'projects', metavar='project', nargs='*', default=['is:watched'],
+        help='Projects to include when checking reviews.')
     args = parser.parse_args()
     main(args)
 

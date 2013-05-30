@@ -55,7 +55,7 @@ def sort_reviews_by_last_updated(reviews):
     return sorted(reviews, key=lambda review: review['lastUpdated'])
 
 
-def render_reviews(reviews, maximum=3):
+def render_reviews(reviews, maximum=None):
     for review in reviews[:maximum]:
         print review['url'], review['subject'].strip()
 
@@ -129,7 +129,7 @@ def main(args):
     reviews = sort_reviews_by_last_updated(reviews)
 
     if reviews and args.no_action:
-        render_reviews(reviews, maximum=100)
+        render_reviews(reviews)
     elif reviews and not args.no_action:
         render_reviews(reviews, maximum=1)
 

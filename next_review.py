@@ -174,7 +174,7 @@ def cli():
         '--port', type=int, default=DEFAULT_GERRIT_PORT,
         help='SSH port for gerrit')
     parser.add_argument(
-        '--username', default=os.getlogin(),
+        '-u', '--username', default=os.getlogin(),
         help='Your SSH username for gerrit')
     parser.add_argument(
         '--email', default=None,

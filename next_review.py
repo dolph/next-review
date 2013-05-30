@@ -35,7 +35,7 @@ def get_watched_reviews(client):
     while True:
         query = [
             'gerrit', 'query', 'is:watched', 'is:open', 'limit:100',
-            '--current-patch-set', '--format=JSON']
+            '--current-patch-set', '--comments', '--format=JSON']
         if reviews:
             query.append('resume_sortkey:%s' % reviews[-2]['sortKey'])
         stdin, stdout, stderr = client.exec_command(' '.join(query))
@@ -111,6 +111,15 @@ def ignore_previously_reviewed(reviews, username=None):
     return filtered_reviews
 
 
+def ignore_previously_commented(reviews, username=None):
+    """Ignore reviews where I'm the last commenter."""
+    filtered_reviews = []
+    for review in reviews:
+        if review['comments'][-1]['reviewer']['username'] != username:
+            filtered_reviews.append(review)
+    return filtered_reviews
+
+
 def ignore_wip(reviews):
     return [x for x in reviews if x['status'] != 'WORKINPROGRESS']
 
@@ -128,6 +137,7 @@ def main(args):
     reviews = require_smokestack_upvote(reviews)
     reviews = ignore_my_reviews(reviews, username=args.username)
     reviews = ignore_previously_reviewed(reviews, username=args.username)
+    reviews = ignore_previously_commented(reviews, username=args.username)
 
     # review old stuff before it expires
     reviews = sort_reviews_by_last_updated(reviews)

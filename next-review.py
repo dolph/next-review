@@ -130,7 +130,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='next-review',
-        description='Start your next gerrit code review.')
+        description='Start your next gerrit code review without any hassle.')
     parser.add_argument(
         '--host', default=DEFAULT_GERRIT_HOST,
         help='SSH hostname for gerrit')

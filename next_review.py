@@ -71,8 +71,21 @@ def _name(ref):
 
 
 def render_reviews(reviews, maximum=None):
+    class Colorize(object):
+        NORMAL = '\033[0m'
+        LINK = '\x1b[34m'
+
+        @property
+        def enabled(cls):
+            return os.environ.get('CLICOLOR')
+
+        def link(cls, s):
+            return cls.LINK + s + cls.NORMAL if cls.enabled else s
+
+    colorize = Colorize()
+
     for review in reviews[:maximum]:
-        print review['url'], review['subject'].strip()
+        print colorize.link(review['url']), review['subject'].strip()
 
 
 def ignore_blocked_reviews(reviews):

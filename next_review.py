@@ -36,8 +36,8 @@ def get_reviews(client, projects):
     while True:
         project_query = '(' + ' OR '.join(projects) + ')'
         query = [
-            'gerrit', 'query', project_query, 'is:open', 'limit:100',
-            '--current-patch-set', '--comments', '--format=JSON']
+            'gerrit', 'query', project_query, 'is:open', '(-Verified-1)',
+            'limit:100', '--current-patch-set', '--comments', '--format=JSON']
         if reviews:
             query.append('resume_sortkey:%s' % reviews[-2]['sortKey'])
         stdin, stdout, stderr = client.exec_command(' '.join(query))

@@ -182,7 +182,7 @@ def cli():
         prog='next-review',
         description='Start your next gerrit code review without any hassle.')
     parser.add_argument(
-        '-h', '--host', default=DEFAULT_GERRIT_HOST,
+        '-H', '--host', default=DEFAULT_GERRIT_HOST,
         help='SSH hostname for gerrit')
     parser.add_argument(
         '-p', '--port', type=int, default=DEFAULT_GERRIT_PORT,

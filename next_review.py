@@ -180,15 +180,15 @@ def main(args):
     # review old stuff before it expires
     reviews = sort_reviews_by_last_updated(reviews)
 
-    if not reviews:
-        print 'Nothing to review!'
-    elif args.list:
+    if args.list:
         render_reviews(reviews)
-    else:
+    elif reviews:
         render_reviews(reviews, maximum=1)
 
         # open the oldest code review in a browser
         open_url(reviews[0]['url'])
+    else:
+        print 'Nothing to review!'
 
     sys.exit(len(reviews))
 

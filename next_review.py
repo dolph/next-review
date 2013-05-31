@@ -88,6 +88,16 @@ def require_jenkins_upvote(reviews):
     return filtered_reviews
 
 
+def ignore_all_downvotes(reviews):
+    filtered_reviews = []
+    for review in reviews:
+        votes = votes_by_name(review)
+        values = set(votes.itervalues())
+        if not set((-1, -2)) & values:
+            filtered_reviews.append(review)
+    return filtered_reviews
+
+
 def ignore_smokestack_downvotes(reviews):
     """Smokestack doesn't verify all reviews, so we can't require upvotes."""
     filtered_reviews = []
@@ -154,6 +164,8 @@ def main(args):
     reviews = ignore_blocked_reviews(reviews)
     reviews = require_jenkins_upvote(reviews)
     reviews = ignore_smokestack_downvotes(reviews)
+    if args.nodownvotes:
+        reviews = ignore_all_downvotes(reviews)
     reviews = ignore_my_reviews(
         reviews, username=args.username, email=args.email)
     reviews = ignore_previously_reviewed(
@@ -199,6 +211,9 @@ def cli():
     parser.add_argument(
         '--list', action='store_true',
         help='List recommended code reviews in order of descending priority.')
+    parser.add_argument(
+        '-n', '--nodownvotes', action='store_true',
+        help='Ignore reviews that have a downvote from anyone.')
     parser.add_argument(
         'projects', metavar='project', nargs='*', default=['is:watched'],
         help='Projects to include when checking reviews.')

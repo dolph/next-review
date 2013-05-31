@@ -13,7 +13,7 @@ setuptools.setup(
     py_modules=['next_review'],
     entry_points={'console_scripts': ['next-review = next_review:cli']},
     classifiers=[
-        'Development Status :: 5 - Stable',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Topic :: Utilities',

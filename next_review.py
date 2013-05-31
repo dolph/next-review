@@ -30,7 +30,7 @@ def ssh_client(host, port, user=None, key=None):
     return client
 
 
-def get_watched_reviews(client, projects):
+def get_reviews(client, projects):
     reviews = []
 
     while True:
@@ -147,7 +147,7 @@ def main(args):
     client = ssh_client(
         host=args.host, port=args.port, user=args.username, key=args.key)
 
-    reviews = get_watched_reviews(client, args.projects)
+    reviews = get_reviews(client, args.projects)
 
     # filter out reviews that are not prime review targets
     reviews = ignore_wip(reviews)

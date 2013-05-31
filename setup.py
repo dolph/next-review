@@ -18,4 +18,4 @@ setuptools.setup(
         'Intended Audience :: Developers',
         'Topic :: Utilities',
     ],
-}
+)

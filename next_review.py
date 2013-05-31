@@ -16,6 +16,10 @@ import os
 import sys
 
 import paramiko
+import pkg_resources
+
+
+__version__ = pkg_resources.require('next-review')[0].version
 
 
 DEFAULT_GERRIT_HOST = 'review.openstack.org'
@@ -194,6 +198,9 @@ def cli():
         prog='next-review',
         description='Start your next gerrit code review without any hassle.')
     parser.add_argument(
+        '--version', action='store_true',
+        help='Show version number and exit')
+    parser.add_argument(
         '-H', '--host', default=DEFAULT_GERRIT_HOST,
         help='SSH hostname for gerrit')
     parser.add_argument(
@@ -218,6 +225,11 @@ def cli():
         'projects', metavar='project', nargs='*', default=['is:watched'],
         help='Projects to include when checking reviews.')
     args = parser.parse_args()
+
+    if args.version:
+        print pkg_resources.require('next-review')[0]
+        sys.exit()
+
     main(args)
 
 

@@ -182,22 +182,22 @@ def cli():
         prog='next-review',
         description='Start your next gerrit code review without any hassle.')
     parser.add_argument(
-        '--host', default=DEFAULT_GERRIT_HOST,
+        '-h', '--host', default=DEFAULT_GERRIT_HOST,
         help='SSH hostname for gerrit')
     parser.add_argument(
-        '--port', type=int, default=DEFAULT_GERRIT_PORT,
+        '-p', '--port', type=int, default=DEFAULT_GERRIT_PORT,
         help='SSH port for gerrit')
     parser.add_argument(
         '-u', '--username', default=os.getlogin(),
         help='Your SSH username for gerrit')
     parser.add_argument(
-        '--email', default=None,
+        '-e', '--email', default=None,
         help='Your email address for gerrit')
     parser.add_argument(
-        '--key', default=None,
+        '-k', '--key', default=None,
         help='Path to your SSH public key for gerrit')
     parser.add_argument(
-        '--list', action='store_true',
+        '-l', '--list', action='store_true',
         help='List recommended code reviews in order of descending priority.')
     parser.add_argument(
         'projects', metavar='project', nargs='*', default=['is:watched'],

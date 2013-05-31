@@ -217,13 +217,13 @@ def cli():
         help='Path to your SSH public key for gerrit')
     parser.add_argument(
         '-l', '--list', action='store_true',
-        help='List recommended code reviews in order of descending priority.')
+        help='List recommended code reviews in order of descending priority')
     parser.add_argument(
         '-n', '--nodownvotes', action='store_true',
-        help='Ignore reviews that have a downvote from anyone.')
+        help='Ignore reviews that have a downvote from anyone')
     parser.add_argument(
         'projects', metavar='project', nargs='*', default=['is:watched'],
-        help='Projects to include when checking reviews.')
+        help='Projects to include when checking reviews')
     args = parser.parse_args()
 
     if args.version:

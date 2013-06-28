@@ -60,7 +60,7 @@ def sort_reviews_by_last_updated(reviews):
 
 
 def votes_by_name(review):
-    """Return a dict of votes like {'name': -1}"""
+    """Return a dict of votes like {'name': -1}."""
     return dict([(_name(x['by']), int(x['value']))
                  for x in review['currentPatchSet'].get('approvals', [])])
 

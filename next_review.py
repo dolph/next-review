@@ -11,6 +11,7 @@
 # under the License.
 
 import argparse
+import getpass
 import json
 import os
 import sys
@@ -31,7 +32,12 @@ def ssh_client(host, port, user=None, key=None):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.load_system_host_keys()
-    client.connect(host, port=port, key_filename=key, username=user)
+    try:
+        client.connect(host, port=port, key_filename=key, username=user)
+    except paramiko.PasswordRequiredException:
+        password = getpass.getpass()
+        client.connect(host, port=port, key_filename=key, username=user,
+                       password=password)
     return client
 
 

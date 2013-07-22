@@ -35,7 +35,7 @@ def ssh_client(host, port, user=None, key=None):
     try:
         client.connect(host, port=port, key_filename=key, username=user)
     except paramiko.PasswordRequiredException:
-        password = getpass.getpass()
+        password = getpass.getpass('SSH Key Passphrase: ')
         client.connect(host, port=port, key_filename=key, username=user,
                        password=password)
     return client

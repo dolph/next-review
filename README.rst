@@ -49,6 +49,24 @@ Or, you can just view the entire list without automatically opening any links::
     https://review.openstack.org/29393 bp/temporary-user-provisioning
     https://review.openstack.org/30386 Add name arguments to keystone command.
 
+Configuration File
+------------------
+``next-review`` has the concept of a multi-section (ini-style) configuration
+file.  The default location it looks for it is ``~/.next_review``.  In this
+configuration file the default section is ``[DEFAULT]`` and the following
+options are supported: ``host``, ``port``, ``username``, ``email``, ``key``,
+and ``projects``.  These values will override the defaults, but any
+cli-arguments that are explicitly set will take precedence over the config
+file.
+
+If you specify sections other than ``[DEFAULT]`` you can use the ``--config-section``
+argument to specify the section that should be used.  If a given option does not
+exist in the specified section, the parser will look in ``[DEFAULT]`` and if
+the option does not exist in either section, it will fall back to the global
+defaults.  So the order of precedence would be option passed on the command
+line, options in the section specified by the ``--config-section`` argument,
+options in the ``[DEFAULT]`` section, and finally the global defaults.
+
 Philosophy
 ----------
 

@@ -11,6 +11,7 @@
 # under the License.
 
 import argparse
+import ConfigParser
 import getpass
 import json
 import os
@@ -26,6 +27,8 @@ __version__ = pkg_resources.require('next-review')[0].version
 
 DEFAULT_GERRIT_HOST = 'review.openstack.org'
 DEFAULT_GERRIT_PORT = 29418
+CONFIG_FILE_OPTIONS = frozenset(['host', 'port', 'username', 'email', 'key',
+                                 'projects', 'nodownvotes'])
 
 
 def ssh_client(host, port, user=None, key=None):
@@ -164,6 +167,88 @@ def ignore_wip(reviews):
     return [x for x in reviews if x['status'] != 'WORKINPROGRESS']
 
 
+def get_config():
+    """Load the configuration."""
+    options = []
+    modified = set()
+    parser = argparse.ArgumentParser(
+        prog='next-review',
+        description='Start your next gerrit code review without any hassle.')
+    options.append(parser.add_argument('--version', action='store_true',
+                                       help='Show version number and exit'))
+    options.append(parser.add_argument(
+        '-f', '--config-file', type=str,
+        default=os.path.expanduser('~/.next_review'),
+        help='Path to configuration file. Default: %(default)s'))
+    options.append(parser.add_argument(
+        '-s', '--config-section', type=str, default=None,
+        help='If multiple gerrit servers are configured in your configuration '
+            'file, use --config-section to specify the section to use'))
+    options.append(parser.add_argument(
+        '-H', '--host', type=str, default=DEFAULT_GERRIT_HOST,
+        help='SSH hostname for gerrit'))
+    options.append(parser.add_argument(
+        '-p', '--port', type=int, default=DEFAULT_GERRIT_PORT,
+        help='SSH port for gerrit'))
+    options.append(parser.add_argument(
+        '-u', '--username', type=str, default=getpass.getuser(),
+        help='Your SSH username for gerrit'))
+    options.append(parser.add_argument(
+        '-e', '--email', type=str, default=None,
+        help='Your email address for gerrit'))
+    options.append(parser.add_argument(
+        '-k', '--key', type=str, default=None,
+        help='Path to your SSH public key for gerrit'))
+    parser.add_argument(
+        '-l', '--list', action='store_true',
+        help='List recommended code reviews in order of descending priority')
+    options.append(parser.add_argument(
+        '-n', '--nodownvotes', action='store_true',
+        help='Ignore reviews that have a downvote from anyone'))
+    options.append(parser.add_argument(
+        'projects', metavar='project', nargs='*', default=['is:watched'],
+        help='Projects to include when checking reviews'))
+
+    option_dict = {opt.dest: opt for opt in options}
+    args = parser.parse_args()
+    config_parser = ConfigParser.ConfigParser()
+    try:
+        with open(args.config_file, 'r') as cfg:
+            config_parser.readfp(cfg)
+    except IOError:
+        return args
+
+    sections = ['DEFAULT']
+
+    if args.config_section is not None:
+        if config_parser.has_section(args.config_section):
+            sections.append(args.config_section)
+
+    for section in sections:
+        for option in CONFIG_FILE_OPTIONS:
+            opt_cfg = option_dict[option]
+            # CLI arguments win every time. Defaults can be overridden by the
+            # config file
+            if getattr(args, option) == opt_cfg.default or option in modified:
+                if config_parser.has_option(section, option):
+                    value = config_parser.get(section, option)
+                    # Type expected and type received in the config file
+                    # is important.
+                    if (opt_cfg.type == type(value)) or option == 'projects':
+                        if option == 'projects':
+                            if type(value) != str:
+                                raise Exception('OMG')
+                            else:
+                                value = value.split(',')
+                        setattr(args, option, value)
+                        modified.add(option)
+                        continue
+                    else:
+                        print('Option %s in config file is of wrong type.' %
+                              option)
+
+    return args
+
 def main(args):
     client = ssh_client(
         host=args.host, port=args.port, user=args.username, key=args.key)
@@ -201,37 +286,7 @@ def main(args):
 
 
 def cli():
-    parser = argparse.ArgumentParser(
-        prog='next-review',
-        description='Start your next gerrit code review without any hassle.')
-    parser.add_argument(
-        '--version', action='store_true',
-        help='Show version number and exit')
-    parser.add_argument(
-        '-H', '--host', default=DEFAULT_GERRIT_HOST,
-        help='SSH hostname for gerrit')
-    parser.add_argument(
-        '-p', '--port', type=int, default=DEFAULT_GERRIT_PORT,
-        help='SSH port for gerrit')
-    parser.add_argument(
-        '-u', '--username', default=getpass.getuser(),
-        help='Your SSH username for gerrit')
-    parser.add_argument(
-        '-e', '--email', default=None,
-        help='Your email address for gerrit')
-    parser.add_argument(
-        '-k', '--key', default=None,
-        help='Path to your SSH public key for gerrit')
-    parser.add_argument(
-        '-l', '--list', action='store_true',
-        help='List recommended code reviews in order of descending priority')
-    parser.add_argument(
-        '-n', '--nodownvotes', action='store_true',
-        help='Ignore reviews that have a downvote from anyone')
-    parser.add_argument(
-        'projects', metavar='project', nargs='*', default=['is:watched'],
-        help='Projects to include when checking reviews')
-    args = parser.parse_args()
+    args = get_config()
 
     if args.version:
         print pkg_resources.require('next-review')[0]

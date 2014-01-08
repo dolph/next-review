@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import print_function
+
 import argparse
 import ConfigParser
 import getpass
@@ -95,7 +97,7 @@ def render_reviews(reviews, maximum=None):
     colorize = Colorize()
 
     for review in reviews[:maximum]:
-        print colorize.link(review['url']), review['subject'].strip()
+        print(colorize.link(review['url']), review['subject'].strip())
 
 
 def ignore_blocked_reviews(reviews):
@@ -280,7 +282,7 @@ def main(args):
         # open the oldest code review in a browser
         webbrowser.open(reviews[0]['url'])
     else:
-        print 'Nothing to review!'
+        print('Nothing to review!')
 
     sys.exit(len(reviews))
 
@@ -289,7 +291,7 @@ def cli():
     args = get_config()
 
     if args.version:
-        print pkg_resources.require('next-review')[0]
+        print(pkg_resources.require('next-review')[0])
         sys.exit()
 
     main(args)

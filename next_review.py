@@ -185,7 +185,7 @@ def get_config():
     options.append(parser.add_argument(
         '-s', '--config-section', type=str, default=None,
         help='If multiple gerrit servers are configured in your configuration '
-            'file, use --config-section to specify the section to use'))
+             'file, use --config-section to specify the section to use'))
     options.append(parser.add_argument(
         '-H', '--host', type=str, default=DEFAULT_GERRIT_HOST,
         help='SSH hostname for gerrit'))
@@ -250,6 +250,7 @@ def get_config():
                               option)
 
     return args
+
 
 def main(args):
     client = ssh_client(

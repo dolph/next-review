@@ -137,11 +137,17 @@ def ignore_smokestack_downvotes(reviews):
     return filtered_reviews
 
 
-def ignore_my_reviews(reviews, username=None, email=None):
-    """Ignore reviews created by me."""
+def ignore_my_good_reviews(reviews, username=None, email=None):
+    """Ignore reviews created by me unless they need my attention."""
     filtered_reviews = []
     for review in reviews:
+        vote_values = set(votes_by_name(review).itervalues())
         if _name(review['owner']) not in (username, email):
+            # either it's not our own review
+            filtered_reviews.append(review)
+        elif (_name(review['owner']) in (username, email)
+                and set((-1, -2)) & vote_values):
+            # or it is our own review, and it has a downvote
             filtered_reviews.append(review)
     return filtered_reviews
 
@@ -265,7 +271,7 @@ def main(args):
     reviews = ignore_smokestack_downvotes(reviews)
     if args.nodownvotes:
         reviews = ignore_all_downvotes(reviews)
-    reviews = ignore_my_reviews(
+    reviews = ignore_my_good_reviews(
         reviews, username=args.username, email=args.email)
     reviews = ignore_previously_reviewed(
         reviews, username=args.username, email=args.email)

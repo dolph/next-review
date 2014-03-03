@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
     name='next-review',
-    version='1.2.4',
+    version='1.3.0',
     description='Start your next gerrit code review without any hassle.',
     author='Dolph Mathews',
     author_email='dolph.mathews@gmail.com',

@@ -85,7 +85,8 @@ def _name(ref):
 def render_reviews(reviews, maximum=None):
     class Colorize(object):
         NORMAL = '\033[0m'
-        LINK = '\x1b[34m'
+        LINK = '\x1b[4;34m'
+        PROJECT = '\x1b[33m'
 
         @property
         def enabled(cls):
@@ -94,10 +95,15 @@ def render_reviews(reviews, maximum=None):
         def link(cls, s):
             return cls.LINK + s + cls.NORMAL if cls.enabled else s
 
+        def project(self, name):
+            return self.PROJECT + name + self.NORMAL if self.enabled else name
+
     colorize = Colorize()
 
     for review in reviews[:maximum]:
-        print(colorize.link(review['url']), review['subject'].strip())
+        print('{} {} {}'.format(colorize.link(review['url']),
+                                colorize.project(review['project']),
+                                review['subject'].strip()))
 
 
 def ignore_blocked_reviews(reviews):

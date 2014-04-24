@@ -89,11 +89,11 @@ def render_reviews(reviews, maximum=None):
         PROJECT = '\x1b[33m'
 
         @property
-        def enabled(cls):
+        def enabled(self):
             return os.environ.get('CLICOLOR')
 
-        def link(cls, s):
-            return cls.LINK + s + cls.NORMAL if cls.enabled else s
+        def link(self, s):
+            return self.LINK + s + self.NORMAL if self.enabled else s
 
         def project(self, name):
             return self.PROJECT + name + self.NORMAL if self.enabled else name

@@ -85,7 +85,7 @@ def _name(ref):
 def render_reviews(reviews, maximum=None):
     class Colorize(object):
         NORMAL = '\033[0m'
-        LINK = '\x1b[4;34m'
+        LINK = '\x1b[34m'
         PROJECT = '\x1b[33m'
 
         @property

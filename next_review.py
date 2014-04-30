@@ -74,7 +74,8 @@ def sort_reviews_by_last_updated(reviews):
 def votes_by_name(review):
     """Return a dict of votes like {'name': -1}."""
     return dict([(_name(x['by']), int(x['value']))
-                 for x in review['currentPatchSet'].get('approvals', [])])
+                 for x in review['currentPatchSet'].get('approvals', [])
+                 if x['type'] in ('Code-Review', 'Verified')])
 
 
 def _name(ref):
@@ -178,7 +179,12 @@ def ignore_previously_commented(reviews, username=None, email=None):
 
 
 def ignore_wip(reviews):
-    return [x for x in reviews if x['status'] != 'WORKINPROGRESS']
+    for review in reviews:
+        for approval in review['currentPatchSet'].get('approvals', []):
+            if approval['type'] == 'Workflow' and approval['value'] == '-1':
+                break  # skip
+        else:
+            yield review
 
 
 def get_config():

@@ -30,7 +30,7 @@ you're watching some projects in gerrit, have an SSH key public key somewhere
 obvious and your login name matches your gerrit username, you can just do::
 
     $ next-review
-    https://review.openstack.org/20404 Use AuthRef for some client fields
+    https://review.openstack.org/88443 stackforge/python-openstacksdk Add Transport doc
 
 The link will be automatically opened for you, because that's how lazy I am.
 
@@ -43,11 +43,11 @@ until it's time for beer and/or sleep::
 Or, you can just view the entire list without automatically opening any links::
 
     $ next-review --list
-    https://review.openstack.org/20404 Use AuthRef for some client fields
-    https://review.openstack.org/26665 Fail-safe mechanism: issue unscoped token if user's default project is invalid.
-    https://review.openstack.org/29878 A minor refactor in wsgi.py
-    https://review.openstack.org/29393 bp/temporary-user-provisioning
-    https://review.openstack.org/30386 Add name arguments to keystone command.
+    https://review.openstack.org/88443 stackforge/python-openstacksdk Add Transport doc
+    https://review.openstack.org/85210 openstack/keystone Fix variable passed to driver module
+    https://review.openstack.org/89458 openstack/python-keystoneclient Make auth_token return a V2 Catalog
+    https://review.openstack.org/90943 openstack/keystone Refactor create_trust for readability
+    https://review.openstack.org/91440 openstack/identity-api Replace non-breaking space
 
 Configuration File
 ------------------

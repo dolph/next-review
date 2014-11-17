@@ -254,18 +254,26 @@ def get_config():
                     value = config_parser.get(section, option)
                     # Type expected and type received in the config file
                     # is important.
-                    if (opt_cfg.type == type(value)) or option == 'projects':
+                    if (opt_cfg.type == type(value) or option == 'projects' or
+                            option == 'port'):
                         if option == 'projects':
                             if type(value) != str:
                                 raise Exception('OMG')
                             else:
                                 value = value.split(',')
+                        elif option == 'port':
+                            try:
+                                value = opt_cfg.type(value)
+                            except:
+                                print(('Option {0} in config file is of wrong '
+                                       'type.').format(option))
+                                continue
                         setattr(args, option, value)
                         modified.add(option)
                         continue
                     else:
-                        print('Option %s in config file is of wrong type.' %
-                              option)
+                        print(('Option {0} in config file is of wrong '
+                               'type.').format(option))
 
     return args
 

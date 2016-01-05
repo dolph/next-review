@@ -75,7 +75,7 @@ def votes_by_name(review):
 
 
 def _name(ref):
-    """Returns the username or email of a reference."""
+    """Return the username or email of a reference."""
     return ref.get('username', ref.get('email'))
 
 

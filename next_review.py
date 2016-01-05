@@ -49,21 +49,16 @@ def ssh_client(host, port, user=None, key=None):
 def get_reviews(client, projects):
     reviews = []
 
-    while True:
-        project_query = '(' + ' OR '.join(projects) + ')'
-        query = [
-            'gerrit', 'query', project_query, 'is:open', '(-Verified-1)',
+    project_query = '(' + ' OR '.join(projects) + ')'
+    query = [
+            'gerrit', 'query', project_query, 'is:open', 'NOT label:Verified-1',
             'limit:100', '--current-patch-set', '--comments', '--format=JSON']
-        if reviews:
-            query.append('resume_sortkey:%s' % reviews[-2]['sortKey'])
-        stdin, stdout, stderr = client.exec_command(' '.join(query))
+    stdin, stdout, stderr = client.exec_command(' '.join(query))
 
-        for line in stdout:
-            reviews.append(json.loads(line))
-        if reviews[-1]['rowCount'] == 0:
-            break
+    for line in stdout:
+        reviews.append(json.loads(line))
 
-    return [x for x in reviews if 'id' in x]
+    return reviews[:-1]
 
 
 def sort_reviews_by_last_updated(reviews):

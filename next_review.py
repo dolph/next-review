@@ -51,8 +51,9 @@ def get_reviews(client, projects):
 
     project_query = '(' + ' OR '.join(projects) + ')'
     query = [
-            'gerrit', 'query', project_query, 'is:open', 'NOT label:Verified-1',
-            'limit:100', '--current-patch-set', '--comments', '--format=JSON']
+        'gerrit', 'query', project_query, 'is:open',
+        'label:Verified+1,jenkins', 'limit:100', '--current-patch-set',
+        '--comments', '--format=JSON']
     stdin, stdout, stderr = client.exec_command(' '.join(query))
 
     for line in stdout:
@@ -106,15 +107,6 @@ def ignore_blocked_reviews(reviews):
     filtered_reviews = []
     for review in reviews:
         if -2 not in votes_by_name(review).values():
-            filtered_reviews.append(review)
-    return filtered_reviews
-
-
-def require_jenkins_upvote(reviews):
-    filtered_reviews = []
-    for review in reviews:
-        votes = votes_by_name(review)
-        if 'jenkins' in votes and votes['jenkins'] >= 1:
             filtered_reviews.append(review)
     return filtered_reviews
 
@@ -274,7 +266,6 @@ def main(args):
     # filter out reviews that are not prime review targets
     reviews = ignore_wip(reviews)
     reviews = ignore_blocked_reviews(reviews)
-    reviews = require_jenkins_upvote(reviews)
     reviews = ignore_smokestack_downvotes(reviews)
     if args.nodownvotes:
         reviews = ignore_all_downvotes(reviews)

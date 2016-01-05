@@ -276,6 +276,7 @@ def main(args):
 
     sys.exit(len(reviews))
 
+
 def merge_ssh_config(args):
     ssh_config = paramiko.SSHConfig()
     ssh_config.parse(open(os.path.expanduser('~/.ssh/config')))
@@ -285,6 +286,7 @@ def merge_ssh_config(args):
         args.username = host_config['user']
     if 'identityfile' in host_config and not args.key:
         args.key = host_config['identityfile']
+
 
 def cli():
     """Run the CLI."""

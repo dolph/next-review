@@ -128,16 +128,6 @@ def ignore_all_downvotes(reviews):
     return filtered_reviews
 
 
-def ignore_smokestack_downvotes(reviews):
-    """Smokestack doesn't verify all reviews, so we can't require upvotes."""
-    filtered_reviews = []
-    for review in reviews:
-        votes = votes_by_name(review)
-        if 'smokestack' not in votes or votes['smokestack'] != -1:
-            filtered_reviews.append(review)
-    return filtered_reviews
-
-
 def ignore_my_good_reviews(reviews, username=None, email=None):
     """Ignore reviews created by me unless they need my attention."""
     filtered_reviews = []
@@ -274,7 +264,6 @@ def main(args):
 
     # filter out reviews that are not prime review targets
     reviews = ignore_wip(reviews)
-    reviews = ignore_smokestack_downvotes(reviews)
     if args.nodownvotes:
         reviews = ignore_all_downvotes(reviews)
     reviews = ignore_my_good_reviews(

@@ -62,7 +62,8 @@ def ssh_client(host, port, user=None, key=None):
     return client
 
 
-def get_reviews(client, projects, include_downvotes=True):
+def get_reviews(client, projects, nodownvotes, onlyplusone, onlyplustwo,
+                noplustwo):
     """Query gerrit for a list of reviews in the given project(s)."""
     reviews = []
 
@@ -75,15 +76,26 @@ def get_reviews(client, projects, include_downvotes=True):
         project_query = '(is:watched OR is:starred)'
 
     query = [
-        'gerrit', 'query', project_query, 'is:open',
-        'label:Verified+1,jenkins', 'NOT label:Code-Review-2',
+        project_query, 'is:open',
+        'label:Verified+1,jenkins',
         'NOT label:Code-Review<=+2,self', 'label:Workflow+0', 'limit:1000']
 
-    if not include_downvotes:
+    # The API for this method is a bit of a mess with all the filtering options
+    # below, but I can't think of a way to simplify the API without changing
+    # the method's behavior?
+    if nodownvotes:
         query.append('NOT label:Code-Review<=-1')
+    if onlyplusone:
+        query.append('label:Code-Review>=+1')
+    if onlyplustwo:
+        query.append('label:Code-Review>=+2')
+    if noplustwo:
+        query.append('NOT label:Code-Review=+2')
 
-    query.extend(['--current-patch-set', '--comments', '--format=JSON'])
-    stdin, stdout, stderr = client.exec_command(' '.join(query))
+    command = ['gerrit', 'query']
+    command.extend(query)
+    command.extend(['--current-patch-set', '--comments', '--format=JSON'])
+    stdin, stdout, stderr = client.exec_command(' '.join(command))
 
     for line in stdout:
         reviews.append(json.loads(line))
@@ -157,28 +169,6 @@ def ignore_previously_commented(reviews, username=None, email=None):
     return filtered_reviews
 
 
-def require_plus_x(reviews, threshold):
-    """Require a minimum Code-Review score."""
-    filtered_reviews = []
-    for review in reviews:
-        votes = votes_by_name(review)
-        for reviewer, vote in votes.iteritems():
-            if reviewer not in BOTS and vote >= threshold:
-                filtered_reviews.append(review)
-                break
-            return filtered_reviews
-
-
-def ignore_all_plus_twos(reviews):
-    """Ignore +2'd reviews."""
-    filtered_reviews = []
-    for review in reviews:
-        votes = votes_by_name(review)
-        if 2 not in set(votes.itervalues()):
-            filtered_reviews.append(review)
-    return filtered_reviews
-
-
 def get_config():
     """Load the configuration."""
     options = []
@@ -223,7 +213,7 @@ def get_config():
         help='Ignore reviews that already have a +2 from anyone'))
     options.append(upvote_group.add_argument(
         '-1', '--onlyplusone', action='store_true',
-        help='Only show reviews that have an upvote from a human'))
+        help='Only show reviews that have an upvote from anyone'))
     options.append(upvote_group.add_argument(
         '-2', '--onlyplustwo', action='store_true',
         help='Only show reviews that have a +2 from a human'))
@@ -286,15 +276,10 @@ def main(args):
         host=args.host, port=args.port, user=args.username, key=args.key)
 
     reviews = get_reviews(
-        client, args.projects, include_downvotes=not args.nodownvotes)
+        client, args.projects, args.nodownvotes, args.onlyplusone,
+        args.onlyplustwo, args.noplustwo)
 
     # filter out reviews that are not prime review targets
-    if args.onlyplustwo:
-        reviews = require_plus_x(reviews, 2)
-    elif args.onlyplusone:
-        reviews = require_plus_x(reviews, 1)
-    if args.noplustwo:
-        reviews = ignore_all_plus_twos(reviews)
     reviews = ignore_my_good_reviews(
         reviews, username=args.username, email=args.email)
     reviews = ignore_previously_commented(

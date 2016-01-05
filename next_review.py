@@ -65,8 +65,8 @@ def get_reviews(client, projects):
     project_query = '(' + ' OR '.join(projects) + ')'
     query = [
         'gerrit', 'query', project_query, 'is:open',
-        'label:Verified+1,jenkins', 'limit:100', '--current-patch-set',
-        '--comments', '--format=JSON']
+        'label:Verified+1,jenkins', '-label:Code-Review-2', 'limit:100',
+        '--current-patch-set', '--comments', '--format=JSON']
     stdin, stdout, stderr = client.exec_command(' '.join(query))
 
     for line in stdout:
@@ -115,15 +115,6 @@ def render_reviews(reviews, maximum=None):
         print('{} {} {}'.format(colorize.link(review['url']),
                                 colorize.project(review['project']),
                                 review['subject'].strip()))
-
-
-def ignore_blocked_reviews(reviews):
-    """Ignore reviews that have been -2'd."""
-    filtered_reviews = []
-    for review in reviews:
-        if -2 not in votes_by_name(review).values():
-            filtered_reviews.append(review)
-    return filtered_reviews
 
 
 def ignore_all_downvotes(reviews):
@@ -283,7 +274,6 @@ def main(args):
 
     # filter out reviews that are not prime review targets
     reviews = ignore_wip(reviews)
-    reviews = ignore_blocked_reviews(reviews)
     reviews = ignore_smokestack_downvotes(reviews)
     if args.nodownvotes:
         reviews = ignore_all_downvotes(reviews)

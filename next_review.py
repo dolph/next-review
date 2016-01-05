@@ -73,7 +73,7 @@ def get_reviews(client, projects, include_downvotes=True):
     query = [
         'gerrit', 'query', project_query, 'is:open',
         'label:Verified+1,jenkins', 'NOT label:Code-Review-2',
-        'NOT label:Code-Review<=+2,self', 'label:Workflow+0', 'limit:100']
+        'NOT label:Code-Review<=+2,self', 'label:Workflow+0', 'limit:1000']
 
     if not include_downvotes:
         query.append('NOT label:Code-Review<=-1')

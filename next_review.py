@@ -169,6 +169,16 @@ def require_plus_x(reviews, threshold):
             return filtered_reviews
 
 
+def ignore_all_plus_twos(reviews):
+    """Ignore +2'd reviews."""
+    filtered_reviews = []
+    for review in reviews:
+        votes = votes_by_name(review)
+        if 2 not in set(votes.itervalues()):
+            filtered_reviews.append(review)
+    return filtered_reviews
+
+
 def get_config():
     """Load the configuration."""
     options = []
@@ -208,6 +218,9 @@ def get_config():
         '-n', '--nodownvotes', action='store_true',
         help='Ignore reviews that have a downvote from anyone'))
     upvote_group = parser.add_mutually_exclusive_group()
+    options.append(upvote_group.add_argument(
+        '-t', '--noplustwo', action='store_true',
+        help='Ignore reviews that already have a +2 from anyone'))
     options.append(upvote_group.add_argument(
         '-1', '--onlyplusone', action='store_true',
         help='Only show reviews that have an upvote from a human'))
@@ -280,6 +293,8 @@ def main(args):
         reviews = require_plus_x(reviews, 2)
     elif args.onlyplusone:
         reviews = require_plus_x(reviews, 1)
+    if args.noplustwo:
+        reviews = ignore_all_plus_twos(reviews)
     reviews = ignore_my_good_reviews(
         reviews, username=args.username, email=args.email)
     reviews = ignore_previously_commented(

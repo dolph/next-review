@@ -304,7 +304,14 @@ def main(args):
 def merge_ssh_config(args):
     """Merge the local SSH config into next-review's config."""
     ssh_config = paramiko.SSHConfig()
-    ssh_config.parse(open(os.path.expanduser('~/.ssh/config')))
+
+    try:
+        ssh_config.parse(open(os.path.expanduser('~/.ssh/config')))
+    except IOError:
+        # The user does not have an SSH config file (FileNotFoundError on py3),
+        # so just bail.
+        return
+
     host_config = ssh_config.lookup(args.host)
 
     if 'user' in host_config and not args.username:

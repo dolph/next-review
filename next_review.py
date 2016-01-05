@@ -73,7 +73,7 @@ def get_reviews(client, projects, include_downvotes=True):
     query = [
         'gerrit', 'query', project_query, 'is:open',
         'label:Verified+1,jenkins', 'NOT label:Code-Review-2',
-        'NOT label:Code-Review<=+2,self', 'limit:100']
+        'NOT label:Code-Review<=+2,self', 'label:Workflow+0', 'limit:100']
 
     if not include_downvotes:
         query.append('NOT label:Code-Review<=-1')
@@ -151,16 +151,6 @@ def ignore_previously_commented(reviews, username=None, email=None):
         if _name(review['comments'][-1]['reviewer']) not in (username, email):
             filtered_reviews.append(review)
     return filtered_reviews
-
-
-def ignore_wip(reviews):
-    """Ignore reviews that are marked as WIP (not ready for review)."""
-    for review in reviews:
-        for approval in review['currentPatchSet'].get('approvals', []):
-            if approval['type'] == 'Workflow' and approval['value'] == '-1':
-                break  # skip
-        else:
-            yield review
 
 
 def get_config():
@@ -255,7 +245,6 @@ def main(args):
         client, args.projects, include_downvotes=not args.nodownvotes)
 
     # filter out reviews that are not prime review targets
-    reviews = ignore_wip(reviews)
     reviews = ignore_my_good_reviews(
         reviews, username=args.username, email=args.email)
     reviews = ignore_previously_commented(

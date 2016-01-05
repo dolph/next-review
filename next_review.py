@@ -233,7 +233,7 @@ def get_config():
                         elif option == 'port':
                             try:
                                 value = opt_cfg.type(value)
-                            except:
+                            except Exception:
                                 print(('Option {0} in config file is of wrong '
                                        'type.').format(option))
                                 continue

@@ -58,7 +58,7 @@ def ssh_client(host, port, user=None, key=None):
     return client
 
 
-def get_reviews(client, projects):
+def get_reviews(client, projects, include_downvotes=True):
     """Query gerrit for a list of reviews in the given project(s)."""
     reviews = []
 
@@ -73,8 +73,12 @@ def get_reviews(client, projects):
     query = [
         'gerrit', 'query', project_query, 'is:open',
         'label:Verified+1,jenkins', 'NOT label:Code-Review-2',
-        'NOT label-Code-Review<=+2,self', 'limit:100', '--current-patch-set',
-        '--comments', '--format=JSON']
+        'NOT label:Code-Review<=+2,self', 'limit:100']
+
+    if not include_downvotes:
+        query.append('NOT label:Code-Review<=-1')
+
+    query.extend(['--current-patch-set', '--comments', '--format=JSON'])
     stdin, stdout, stderr = client.exec_command(' '.join(query))
 
     for line in stdout:
@@ -123,17 +127,6 @@ def render_reviews(reviews, maximum=None):
         print('{} {} {}'.format(colorize.link(review['url']),
                                 colorize.project(review['project']),
                                 review['subject'].strip()))
-
-
-def ignore_all_downvotes(reviews):
-    """Ignore reviews that have been downvoted."""
-    filtered_reviews = []
-    for review in reviews:
-        votes = votes_by_name(review)
-        values = set(votes.itervalues())
-        if not set((-1, -2)) & values:
-            filtered_reviews.append(review)
-    return filtered_reviews
 
 
 def ignore_my_good_reviews(reviews, username=None, email=None):
@@ -258,12 +251,11 @@ def main(args):
     client = ssh_client(
         host=args.host, port=args.port, user=args.username, key=args.key)
 
-    reviews = get_reviews(client, args.projects)
+    reviews = get_reviews(
+        client, args.projects, include_downvotes=not args.nodownvotes)
 
     # filter out reviews that are not prime review targets
     reviews = ignore_wip(reviews)
-    if args.nodownvotes:
-        reviews = ignore_all_downvotes(reviews)
     reviews = ignore_my_good_reviews(
         reviews, username=args.username, email=args.email)
     reviews = ignore_previously_commented(

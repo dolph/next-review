@@ -10,6 +10,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+"""
+Select a code review from gerrit that needs attention.
+
+This module queries gerrit for a code review that needs attention and presents
+it to the user without any hassle of navigating the gerrit UI to select a
+review manually.
+
+Older reviews that are ready for human eyes are given priority.
+
+"""
+
 from __future__ import print_function
 
 import argparse
@@ -34,6 +45,7 @@ CONFIG_FILE_OPTIONS = frozenset(['host', 'port', 'username', 'email', 'key',
 
 
 def ssh_client(host, port, user=None, key=None):
+    """Build an SSH client to gerrit."""
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.load_system_host_keys()
@@ -47,6 +59,7 @@ def ssh_client(host, port, user=None, key=None):
 
 
 def get_reviews(client, projects):
+    """Query gerrit for a list of reviews in the given project(s)."""
     reviews = []
 
     project_query = '(' + ' OR '.join(projects) + ')'
@@ -80,6 +93,7 @@ def _name(ref):
 
 
 def render_reviews(reviews, maximum=None):
+    """Render one or more review links back to the CLI."""
     class Colorize(object):
         NORMAL = '\033[0m'
         LINK = '\x1b[34m'
@@ -104,6 +118,7 @@ def render_reviews(reviews, maximum=None):
 
 
 def ignore_blocked_reviews(reviews):
+    """Ignore reviews that have been -2'd."""
     filtered_reviews = []
     for review in reviews:
         if -2 not in votes_by_name(review).values():
@@ -112,6 +127,7 @@ def ignore_blocked_reviews(reviews):
 
 
 def ignore_all_downvotes(reviews):
+    """Ignore reviews that have been downvoted."""
     filtered_reviews = []
     for review in reviews:
         votes = votes_by_name(review)
@@ -166,6 +182,7 @@ def ignore_previously_commented(reviews, username=None, email=None):
 
 
 def ignore_wip(reviews):
+    """Ignore reviews that are marked as WIP (not ready for review)."""
     for review in reviews:
         for approval in review['currentPatchSet'].get('approvals', []):
             if approval['type'] == 'Workflow' and approval['value'] == '-1':
@@ -258,6 +275,7 @@ def get_config():
 
 
 def main(args):
+    """Query gerrit, filter reviews, and render the result."""
     client = ssh_client(
         host=args.host, port=args.port, user=args.username, key=args.key)
 
@@ -293,6 +311,7 @@ def main(args):
 
 
 def cli():
+    """Run the CLI."""
     args = get_config()
 
     if args.version:

@@ -278,6 +278,7 @@ def main(args):
 
 
 def merge_ssh_config(args):
+    """Merge the local SSH config into next-review's config."""
     ssh_config = paramiko.SSHConfig()
     ssh_config.parse(open(os.path.expanduser('~/.ssh/config')))
     host_config = ssh_config.lookup(args.host)

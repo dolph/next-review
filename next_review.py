@@ -62,11 +62,19 @@ def get_reviews(client, projects):
     """Query gerrit for a list of reviews in the given project(s)."""
     reviews = []
 
-    project_query = '(' + ' OR '.join(projects) + ')'
+    if projects:
+        # prefix each project name with the project search operator
+        projects = ['project:' + project for project in projects]
+
+        project_query = '(' + ' OR '.join(projects) + ')'
+    else:
+        project_query = '(is:watched OR is:starred)'
+
     query = [
         'gerrit', 'query', project_query, 'is:open',
-        'label:Verified+1,jenkins', '-label:Code-Review-2', 'limit:100',
-        '--current-patch-set', '--comments', '--format=JSON']
+        'label:Verified+1,jenkins', 'NOT label:Code-Review-2',
+        'NOT label-Code-Review<=+2,self', 'limit:100', '--current-patch-set',
+        '--comments', '--format=JSON']
     stdin, stdout, stderr = client.exec_command(' '.join(query))
 
     for line in stdout:
@@ -143,16 +151,6 @@ def ignore_my_good_reviews(reviews, username=None, email=None):
     return filtered_reviews
 
 
-def ignore_previously_reviewed(reviews, username=None, email=None):
-    """Ignore things I've already reviewed."""
-    filtered_reviews = []
-    for review in reviews:
-        if (username not in votes_by_name(review)
-                and email not in votes_by_name(review)):
-            filtered_reviews.append(review)
-    return filtered_reviews
-
-
 def ignore_previously_commented(reviews, username=None, email=None):
     """Ignore reviews where I'm the last commenter."""
     filtered_reviews = []
@@ -211,7 +209,7 @@ def get_config():
         '-n', '--nodownvotes', action='store_true',
         help='Ignore reviews that have a downvote from anyone'))
     options.append(parser.add_argument(
-        'projects', metavar='project', nargs='*', default=['is:watched'],
+        'projects', metavar='project', nargs='*', default=None,
         help='Projects to include when checking reviews'))
 
     option_dict = {opt.dest: opt for opt in options}
@@ -267,8 +265,6 @@ def main(args):
     if args.nodownvotes:
         reviews = ignore_all_downvotes(reviews)
     reviews = ignore_my_good_reviews(
-        reviews, username=args.username, email=args.email)
-    reviews = ignore_previously_reviewed(
         reviews, username=args.username, email=args.email)
     reviews = ignore_previously_commented(
         reviews, username=args.username, email=args.email)

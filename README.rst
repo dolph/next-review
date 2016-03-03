@@ -2,9 +2,6 @@
 next-review
 ===========
 
-.. image:: https://img.shields.io/pypi/v/next-review.svg
-   :target: https://pypi.python.org/pypi/next-review
-
 Start your next gerrit code review without any hassle.
 
 So you have 10 minutes to spend on code reviews and you want to be as
@@ -20,6 +17,9 @@ articulate your opinion, cast your vote and then move on to your
 
 Installation
 ------------
+
+.. image:: https://img.shields.io/pypi/v/next-review.svg
+   :target: https://pypi.python.org/pypi/next-review
 
 From PyPi::
 

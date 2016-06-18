@@ -150,11 +150,11 @@ def sort_review_by_reviewday_score(reviews):
                   key=lambda review: (-review['score'], review['lastUpdated']))
 
 
-def votes_by_name(review):
-    """Return a dict of votes like {'name': -1}."""
-    return dict([(_name(x['by']), int(x['value']))
-                 for x in review['currentPatchSet'].get('approvals', [])
-                 if x['type'] in ('Code-Review', 'Verified')])
+def votes_for_review(review):
+    """Return a list of votes for the specified review."""
+    return [int(x['value'])
+            for x in review['currentPatchSet'].get('approvals', [])
+            if x['type'] in ('Code-Review', 'Verified')]
 
 
 def _name(ref):
@@ -190,7 +190,7 @@ def render_reviews(reviews, maximum=None):
 def ignore_my_good_reviews(reviews, username=None, email=None):
     """Ignore reviews created by me unless they need my attention."""
     for review in reviews:
-        vote_values = set(votes_by_name(review).values())
+        vote_values = set(votes_for_review(review))
         if _name(review['owner']) not in (username, email):
             # either it's not our own review
             yield review

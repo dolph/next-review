@@ -189,26 +189,22 @@ def render_reviews(reviews, maximum=None):
 
 def ignore_my_good_reviews(reviews, username=None, email=None):
     """Ignore reviews created by me unless they need my attention."""
-    filtered_reviews = []
     for review in reviews:
         vote_values = set(votes_by_name(review).values())
         if _name(review['owner']) not in (username, email):
             # either it's not our own review
-            filtered_reviews.append(review)
+            yield review
         elif (_name(review['owner']) in (username, email)
                 and set((-1, -2)) & vote_values):
             # or it is our own review, and it has a downvote
-            filtered_reviews.append(review)
-    return filtered_reviews
+            yield review
 
 
 def ignore_previously_commented(reviews, username=None, email=None):
     """Ignore reviews where I'm the last commenter."""
-    filtered_reviews = []
     for review in reviews:
         if _name(review['comments'][-1]['reviewer']) not in (username, email):
-            filtered_reviews.append(review)
-    return filtered_reviews
+            yield review
 
 
 def filter_ignore_file(reviews, ignore_file):

@@ -169,6 +169,14 @@ def ignore_previously_commented(reviews, username=None, email=None):
     return filtered_reviews
 
 
+def filter_ignore_file(reviews, ignore_file):
+    reviews_to_ignore = open(ignore_file).read().split()
+    for review in reviews:
+        if review['url'] in reviews_to_ignore:
+            continue
+        yield review
+
+
 def get_config():
     """Load the configuration."""
     options = []
@@ -220,6 +228,9 @@ def get_config():
     options.append(parser.add_argument(
         'projects', metavar='project', nargs='*', default=None,
         help='Projects to include when checking reviews'))
+    options.append(parser.add_argument(
+        '--ignore-file', type=str, default=None,
+        help='An file containing a list of reviews to ignore'))
 
     option_dict = {opt.dest: opt for opt in options}
     args = parser.parse_args()
@@ -284,6 +295,8 @@ def main(args):
         reviews, username=args.username, email=args.email)
     reviews = ignore_previously_commented(
         reviews, username=args.username, email=args.email)
+    if args.ignore_file:
+        reviews = filter_ignore_file(reviews, args.ignore_file)
 
     # review old stuff before it expires
     reviews = sort_reviews_by_last_updated(reviews)

@@ -28,14 +28,17 @@ try:
     import ConfigParser as configparser
 except ImportError:
     import configparser
+import errno
 import getpass
 import json
 import os
 import sys
+import time
 import webbrowser
 
 import paramiko
 import pkg_resources
+import requests
 
 
 __version__ = pkg_resources.require('next-review')[0].version
@@ -46,6 +49,45 @@ DEFAULT_GERRIT_HOST = 'review.openstack.org'
 DEFAULT_GERRIT_PORT = 29418
 CONFIG_FILE_OPTIONS = frozenset(['host', 'port', 'username', 'email', 'key',
                                  'projects', 'nodownvotes'])
+REVIEWDAY_JSON_URL = 'http://status.openstack.org/reviews/reviewday.json'
+
+
+class ReviewDayData(object):
+
+    def __init__(self):
+        self._cache_file = os.path.expanduser('~/.reviewday.json')
+        self._data = {}
+
+    def _is_cache_old(self):
+        try:
+            stat = os.stat(self._cache_file)
+        except OSError as e:
+            if e.errno == errno.ENOENT:  # file not found
+                return True
+            raise
+        one_day = 60 * 60 * 24
+        return time.time() > (stat.st_mtime + one_day)
+
+    def _update_data(self):
+        r = requests.get(REVIEWDAY_JSON_URL)
+        with open(self._cache_file, 'w') as f:
+            f.write(r.content)
+
+    def load(self):
+        if self._is_cache_old():
+            self._update_data()
+
+        self._data = json.load(open(self._cache_file))
+        return self
+
+    def get_score(self, review):
+        # remove openstack/ from project name
+        project_name = review['project'].split('/')[-1]
+        if project_name not in self._data['projects']:
+            return -1
+        url_parts = review['url'].rsplit('/', 1)
+        project_url = url_parts[0] + '/#change,' + url_parts[1]
+        return self._data['projects'][project_name][project_url]['score']
 
 
 def ssh_client(host, port, user=None, key=None):
@@ -103,16 +145,16 @@ def get_reviews(client, projects, nodownvotes, onlyplusone, onlyplustwo,
     return reviews[:-1]
 
 
-def sort_reviews_by_last_updated(reviews):
-    """Sort reviews in ascending order by last update date."""
-    return sorted(reviews, key=lambda review: review['lastUpdated'])
+def sort_review_by_reviewday_score(reviews):
+    return sorted(reviews,
+                  key=lambda review: (-review['score'], review['lastUpdated']))
 
 
-def votes_by_name(review):
-    """Return a dict of votes like {'name': -1}."""
-    return dict([(_name(x['by']), int(x['value']))
-                 for x in review['currentPatchSet'].get('approvals', [])
-                 if x['type'] in ('Code-Review', 'Verified')])
+def votes_for_review(review):
+    """Return a list of votes for the specified review."""
+    return [int(x['value'])
+            for x in review['currentPatchSet'].get('approvals', [])
+            if x['type'] in ('Code-Review', 'Verified')]
 
 
 def _name(ref):
@@ -147,26 +189,36 @@ def render_reviews(reviews, maximum=None):
 
 def ignore_my_good_reviews(reviews, username=None, email=None):
     """Ignore reviews created by me unless they need my attention."""
-    filtered_reviews = []
     for review in reviews:
-        vote_values = set(votes_by_name(review).values())
+        vote_values = set(votes_for_review(review))
         if _name(review['owner']) not in (username, email):
             # either it's not our own review
-            filtered_reviews.append(review)
+            yield review
         elif (_name(review['owner']) in (username, email)
                 and set((-1, -2)) & vote_values):
             # or it is our own review, and it has a downvote
-            filtered_reviews.append(review)
-    return filtered_reviews
+            yield review
 
 
 def ignore_previously_commented(reviews, username=None, email=None):
     """Ignore reviews where I'm the last commenter."""
-    filtered_reviews = []
     for review in reviews:
         if _name(review['comments'][-1]['reviewer']) not in (username, email):
-            filtered_reviews.append(review)
-    return filtered_reviews
+            yield review
+
+
+def filter_ignore_file(reviews, ignore_file):
+    reviews_to_ignore = open(ignore_file).read().split()
+    for review in reviews:
+        if review['url'] in reviews_to_ignore:
+            continue
+        yield review
+
+
+def add_reviewday_scores(reviews, reviewday):
+    for review in reviews:
+        review['score'] = reviewday.get_score(review)
+        yield review
 
 
 def get_config():
@@ -220,6 +272,9 @@ def get_config():
     options.append(parser.add_argument(
         'projects', metavar='project', nargs='*', default=None,
         help='Projects to include when checking reviews'))
+    options.append(parser.add_argument(
+        '--ignore-file', type=str, default=None,
+        help='An file containing a list of reviews to ignore'))
 
     option_dict = {opt.dest: opt for opt in options}
     args = parser.parse_args()
@@ -284,9 +339,12 @@ def main(args):
         reviews, username=args.username, email=args.email)
     reviews = ignore_previously_commented(
         reviews, username=args.username, email=args.email)
+    if args.ignore_file:
+        reviews = filter_ignore_file(reviews, args.ignore_file)
 
-    # review old stuff before it expires
-    reviews = sort_reviews_by_last_updated(reviews)
+    reviewday = ReviewDayData().load()
+    reviews = add_reviewday_scores(reviews, reviewday)
+    reviews = sort_review_by_reviewday_score(reviews)
 
     if args.list:
         render_reviews(reviews)
